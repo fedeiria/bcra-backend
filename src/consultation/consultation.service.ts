@@ -37,14 +37,31 @@ export class ConsultationService {
                 })
             );
 
-            const data = response.data?.results;
+            const data = response.data;
 
-            if (!data) return null;
+            if (data.status === 404) {
+                return {
+                    error: true,
+                    message: data.errorMessage?.[0] || 'No se encontraron datos.'
+                };
+            }
+
+            const results = response.data?.results;
+
+            // Protection against empty data
+            if (!results || !results.periodos?.length) {
+                return {
+                    error: true,
+                    message: 'No se encontraron datos para el CUIT proporcionado.'
+                };
+            }
+
+            const ultimoPeriodo = results.periodos[0];
 
             let deudaTotal = 0;
             let peorSituacion = 0;
 
-            for (const entidad of data.periodos[0].entidades) {
+            for (const entidad of ultimoPeriodo.entidades) {
                 deudaTotal += entidad.monto || 0;
 
                 if (entidad.situacion > peorSituacion) {
@@ -53,19 +70,26 @@ export class ConsultationService {
             }
 
             return {
-                cuit: data.identificacion,
-                denominacion: data.denominacion,
-                periodo: data.periodos[0].periodo,
-                deudaTotal,
-                situacion: peorSituacion,
-                cantidadEntidades: data.periodos[0].entidades.length
+                error: false,
+                data: {
+                    cuit: results.identificacion,
+                    denominacion: results.denominacion,
+                    periodo: ultimoPeriodo.periodo,
+                    deudaTotal,
+                    situacion: peorSituacion,
+                    cantidadEntidades: ultimoPeriodo.entidades.length
+                }
             };
-
         }
         catch (error: any) {
+
+            console.error('Error fetching current debt:', error?.response?.data || error);
+
+            // Handle specific cases like 404 or timeout if needed, otherwise return a generic error
             return {
                 error: true,
-                message: error?.response?.data?.errorMessages || 'Unknown error'
+                message: 'Error al consultar el servicio del BCRA.',
+                details: error?.message
             };
         }
     }
@@ -73,47 +97,138 @@ export class ConsultationService {
     /**
      * Get historical debt for a given CUIT.
      * @param cuit The CUIT for which to fetch historical debt.
-     * @returns A promise resolving to the historical debt data or an error object.
+     * @returns A normalized response with historical data or error information
      */
     async getHistoricalDebt(cuit: string): Promise<any> {
         try {
             const response = await firstValueFrom(
-                this.httpService.get(`${this.BASE_URL}${this.ENDPOINTS.HISTORICAL}/${cuit}`, {
-                    timeout: 5000
-                })
+                this.httpService.get(
+                    `${this.BASE_URL}${this.ENDPOINTS.HISTORICAL}/${cuit}`,
+                    { timeout: 5000 }
+                )
             );
-            return response.data;
+
+            const data = response.data;
+
+            // Case: BCRA error (non-existent CUIT  or other issues)
+            if (data.status === 404) {
+                return {
+                    error: true,
+                    message: data.errorMessages?.[0] || 'No se encontraron datos.'
+                };
+            }
+
+            const results = data?.results;
+
+            // Protection against empty data
+            if (!results || !results.periodos?.length) {
+                return {
+                    error: true,
+                    message: 'No hay historial disponible para el CUIT ingresado.'
+                };
+            }
+
+            return {
+                error: false,
+                data: {
+                    cuit: results.identificacion,
+                    denominacion: results.denominacion,
+                    periodos: results.periodos
+                }
+            };
+
         }
         catch (error: any) {
             console.error('Error fetching historical debt:', error?.response?.data || error);
 
             return {
                 error: true,
-                message: error?.response?.data?.errorMessages || 'Unknown error'
+                message: 'Error al consultar el historial del BCRA.',
+                details: error?.message
             };
         }
     }
 
+
     /**
      * Get rejected checks for a given CUIT.
      * @param cuit The CUIT for which to fetch rejected checks.
-     * @returns A promise resolving to the rejected checks data or an error object.
+     * @returns A normalized response with rejected checks data or error information
      */
     async getRejectedChecks(cuit: string): Promise<any> {
         try {
             const response = await firstValueFrom(
-                this.httpService.get(`${this.BASE_URL}${this.ENDPOINTS.REJECTED_CHECKS}/${cuit}`, {
-                    timeout: 5000
-                })
+                this.httpService.get(
+                    `${this.BASE_URL}${this.ENDPOINTS.REJECTED_CHECKS}/${cuit}`,
+                    { timeout: 5000 }
+                )
             );
-            return response.data;
+
+            const data = response.data;
+
+            // Case: BCRA error (non-existent CUIT  or other issues)
+            if (data.status === 404) {
+                return {
+                    error: true,
+                    message: data.errorMessages?.[0] || 'No se encontraron datos.'
+                };
+            }
+
+            const results = data?.results;
+
+            // Protection against empty data
+            if (!results || !results.causales?.length) {
+                return {
+                    error: false,
+                    data: {
+                        cuit,
+                        cantidad: 0,
+                        totalMonto: 0,
+                        detalle: []
+                    }
+                };
+            }
+
+            let cantidad = 0;
+            let totalMonto = 0;
+            const detalle: any[] = [];
+
+            for (const causal of results.causales) {
+                for (const entidad of causal.entidades) {
+                    for (const cheque of entidad.detalle) {
+                        cantidad++;
+                        totalMonto += cheque.monto || 0;
+
+                        detalle.push({
+                            causal: causal.causal,
+                            entidad: entidad.entidad,
+                            monto: cheque.monto,
+                            fechaRechazo: cheque.fechaRechazo,
+                            estadoMulta: cheque.estadoMulta
+                        });
+                    }
+                }
+            }
+
+            return {
+                error: false,
+                data: {
+                    cuit: results.identificacion,
+                    denominacion: results.denominacion,
+                    cantidad,
+                    totalMonto,
+                    detalle
+                }
+            };
+
         }
         catch (error: any) {
             console.error('Error fetching rejected checks:', error?.response?.data || error);
 
             return {
                 error: true,
-                message: error?.response?.data?.errorMessages || 'Unknown error'
+                message: 'Error al consultar cheques rechazados.',
+                details: error?.message
             };
         }
     }
@@ -121,23 +236,38 @@ export class ConsultationService {
     /**
      * Get historical evolution of debt for a given CUIT, including total debt and worst situation per period.
      * @param cuit The CUIT for which to fetch historical evolution.
-     * @returns A promise resolving to the historical evolution data or an error object.
+     * @returns A normalized response with historical evolution data or error information
      */
     async getHistoricalEvolution(cuit: string): Promise<any> {
         try {
             const response = await firstValueFrom(
-                this.httpService.get(`${this.BASE_URL}${this.ENDPOINTS.HISTORICAL}/${cuit}`, {
-                    timeout: 5000
-                })
+                this.httpService.get(
+                    `${this.BASE_URL}${this.ENDPOINTS.HISTORICAL}/${cuit}`,
+                    { timeout: 5000 }
+                )
             );
 
-            const data = response.data?.results;
+            const data = response.data;
 
-            if (!data || !data.periodos?.length) {
-                return [];
+            // Case: BCRA error (non-existent CUIT  or other issues)
+            if (data.status === 404) {
+                return {
+                    error: true,
+                    message: data.errorMessages?.[0] || 'No se encontraron datos.'
+                };
             }
 
-            const history = data.periodos.map(periodo => {
+            const results = data?.results;
+
+            // Protection against empty data
+            if (!results || !results.periodos?.length) {
+                return {
+                    error: false,
+                    data: []
+                };
+            }
+
+            const history = results.periodos.map(periodo => {
 
                 let deudaTotal = 0;
                 let peorSituacion = 0;
@@ -158,7 +288,10 @@ export class ConsultationService {
                 };
             });
 
-            return history;
+            return {
+                error: false,
+                data: history
+            };
 
         }
         catch (error: any) {
@@ -166,7 +299,8 @@ export class ConsultationService {
 
             return {
                 error: true,
-                message: error?.response?.data?.errorMessages || 'Unknown error'
+                message: 'Error al consultar la evolución histórica',
+                details: error?.message
             };
         }
     }
@@ -174,29 +308,45 @@ export class ConsultationService {
     /**
      * Get a summary of rejected checks for a given CUIT, including total count and total amount.
      * @param cuit The CUIT for which to fetch the rejected checks summary.
-     * @returns A promise resolving to the summary data or an error object.
+     * @returns A normalized response with summary data or error information
      */
     async getRejectedChecksSummary(cuit: string): Promise<any> {
         try {
             const response = await firstValueFrom(
-                this.httpService.get(`${this.BASE_URL}${this.ENDPOINTS.REJECTED_CHECKS}/${cuit}`, {
-                    timeout: 5000
-                })
+                this.httpService.get(
+                    `${this.BASE_URL}${this.ENDPOINTS.REJECTED_CHECKS}/${cuit}`,
+                    { timeout: 5000 }
+                )
             );
 
-            const data = response.data?.results;
+            const data = response.data;
 
-            if (!data || !data.causales) {
+            // Case: BCRA error (non-existent CUIT  or other issues)
+            if (data.status === 404) {
                 return {
-                    cantidad: 0,
-                    montoTotal: 0
+                    error: true,
+                    message: data.errorMessages?.[0] || 'No se encontraron datos.'
+                };
+            }
+
+            const results = data?.results;
+
+            // Case: valid case but no checks
+            if (!results || !results.causales?.length) {
+                return {
+                    error: false,
+                    data: {
+                        cuit,
+                        cantidad: 0,
+                        montoTotal: 0
+                    }
                 };
             }
 
             let cantidad = 0;
             let montoTotal = 0;
 
-            for (const causal of data.causales) {
+            for (const causal of results.causales) {
                 for (const entidad of causal.entidades) {
                     for (const cheque of entidad.detalle) {
                         cantidad++;
@@ -205,15 +355,24 @@ export class ConsultationService {
                 }
             }
 
-            return { cantidad, montoTotal };
+            return {
+                error: false,
+                data: {
+                    cuit: results.identificacion,
+                    denominacion: results.denominacion,
+                    cantidad,
+                    montoTotal
+                }
+            };
 
         }
         catch (error: any) {
-            console.error('Error fetching checks:', error?.response?.data || error);
+            console.error('Error fetching checks summary:', error?.response?.data || error);
 
             return {
                 error: true,
-                message: error?.response?.data?.errorMessages || 'Unknown error'
+                message: 'Error al consultar cheques rechazados',
+                details: error?.message
             };
         }
     }
@@ -221,27 +380,36 @@ export class ConsultationService {
     /**
      * Get a credit summary for a given CUIT, combining current debt and rejected checks summary.
      * @param cuit The CUIT for which to fetch the credit summary.
-     * @returns A promise resolving to the credit summary data or an error object.
+     * @returns A normalized credit summary or error object
      */
     async getCreditSummary(cuit: string): Promise<any> {
 
         const debt = await this.getCurrentDebt(cuit);
-        const checks = await this.getRejectedChecksSummary(cuit);
 
+        // If there's an error fetching the debt, return it
         if (debt?.error) {
             return debt;
         }
 
+        const checks = await this.getRejectedChecksSummary(cuit);
+
+        const debtData = debt.data;
+        const checksData = checks?.error ? null : checks?.data;
+
         return {
-            cuit: debt.cuit,
-            denominacion: debt.denominacion,
-            periodo: debt.periodo,
-            situacion: debt.situacion,
-            deudaTotal: debt.deudaTotal,
-            cantidadEntidades: debt.cantidadEntidades,
-            cheques: {
-                cantidad: checks?.cantidad || 0,
-                montoTotal: checks?.montoTotal || 0
+            error: false,
+            data: {
+                cuit: debtData.cuit,
+                denominacion: debtData.denominacion,
+                periodo: debtData.periodo,
+                situacion: debtData.situacion,
+                deudaTotal: debtData.deudaTotal,
+                cantidadEntidades: debtData.cantidadEntidades,
+
+                cheques: {
+                    cantidad: checksData?.cantidad || 0,
+                    montoTotal: checksData?.montoTotal || 0
+                }
             }
         };
     }
