@@ -1,6 +1,7 @@
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PassportStrategy } from '@nestjs/passport';
 import { Injectable } from '@nestjs/common';
+import { APP_CONFIG } from '../common/constants/app-config';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -11,7 +12,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
             // Verify that the token is not expired.
             ignoreExpiration: false,
             // The secret key used to verify the token's signature. In production, this should be set in an environment variable and not hardcoded.
-            secretOrKey: process.env.JWT_SECRET ?? 'CLAVE_SECRETA_SUPER_COMPLICADA_WURTH_2026',
+            secretOrKey: APP_CONFIG.jwt.secret,
         });
     }
 

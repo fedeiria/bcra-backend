@@ -6,16 +6,15 @@ import { JwtStrategy } from './jwt.strategy';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { UsersModule } from '../users/users.module';
+import { APP_CONFIG } from '../common/constants/app-config';
 
 @Module({
   imports: [
     UsersModule,
     PassportModule,
     JwtModule.register({
-      // Clave secreta para firmar los tokens. 
-      // En producción usaremos process.env.JWT_SECRET, por ahora dejamos un fallback para local
-      secret: process.env.JWT_SECRET ?? 'CLAVE_SECRETA_SUPER_COMPLICADA_WURTH_2026',
-      signOptions: { expiresIn: '8h' }, // Expiración del token
+      secret: APP_CONFIG.jwt.secret, // <-- Parametrizado
+      signOptions: { expiresIn: APP_CONFIG.jwt.expiresIn }, // <-- Parametrizado
     }),
   ],
   controllers: [AuthController],

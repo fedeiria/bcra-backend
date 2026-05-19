@@ -49,16 +49,6 @@ export class ConsultationController {
     }
 
     /**
-     * Get the summary of rejected checks for a user by their CUIT.
-     * @param body The request body containing the CUIT
-     * @returns The summary of rejected checks for the user
-     */
-    @Post('checks-summary')
-    async getChecksSummary(@Body() body: { cuit: string }) {
-        return this.consultationService.getRejectedChecksSummary(body.cuit);
-    }
-
-    /**
      * Get the credit summary for a user by their CUIT.
      * @param body The request body containing the CUIT
      * @returns The credit summary for the user

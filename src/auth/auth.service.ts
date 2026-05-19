@@ -54,7 +54,7 @@ export class AuthService {
                     role: user.role
                 }
             },
-            message: 'Login exitoso'
+            message: 'Login exitoso.'
         };
     }
 }
