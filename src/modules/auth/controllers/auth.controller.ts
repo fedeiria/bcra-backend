@@ -1,7 +1,7 @@
 import { Controller, Post, Body, HttpCode, HttpStatus, BadRequestException } from '@nestjs/common';
 
-import { AuthService } from './auth.service';
-import { UsersService } from '../users/users.service';
+import { AuthService } from '../services/auth.service';
+import { UsersService } from '../../users/services/users.service';
 
 @Controller('auth')
 export class AuthController {
@@ -37,17 +37,27 @@ export class AuthController {
      * @returns A promise resolving to the registration response containing the new user's ID and email
      */
     @Post('register')
-    async register(@Body() body: { email: string; passwordPlain: string; username: string }) {
-        if (!body.email || !body.passwordPlain || !body.username) {
+    async register(@Body() body: { email: string; passwordPlain: string; username: string; role: string }) {
+        if (!body.email || !body.passwordPlain || !body.username || !body.role) {
             throw new BadRequestException('Todos los campos son obligatorios.');
         }
 
-        const newUser = await this.usersService.create(body.email, body.passwordPlain, body.username);
+        const newUser = await this.usersService.create(body.email, body.passwordPlain, body.username, body.role);
 
         return {
             error: false,
             message: 'Usuario registrado con éxito.',
-            data: { id: newUser.id, email: newUser.email }
+            data: { id: newUser.id, username: newUser.username, email: newUser.email, role: newUser.role, createdAt: newUser.createdAt }
         };
+    }
+
+    /**
+     * Get a new access token.
+     * @param refreshToken The refresh token to validate.
+     * @returns A promise with the new access token.
+     */
+    @Post('refresh')
+    async refresh(@Body('refreshToken') refreshToken: string) {
+        return await this.authService.refresh(refreshToken);
     }
 }
