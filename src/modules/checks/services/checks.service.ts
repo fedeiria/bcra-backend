@@ -42,19 +42,32 @@ export class ChecksService {
     catch (error: unknown) {
       const axiosError = error as { response?: { status: number, data?: any }; message: string };
       
-      // If the API returns a 404 error (Check no exists in the database)
-      if (axiosError.response?.status === 404) {
+      const status = axiosError.response?.status;
+      const bcraMessages = axiosError.response?.data?.errorMessages;
+      
+      // Extract the official message from the 'errorMessages' array provided by the API
+      const bcraMessage = (bcraMessages && bcraMessages.length > 0) 
+        ? bcraMessages[0] 
+        : 'Error al consultar la API de Cheques del BCRA. Intente nuevamente.';
+
+      if (status === 404 || status === 400 || status === 500) {
+        // 404: "Entidad informada inexistente."
+        // 400: "Validar formato de los parámetros enviados."
+        // 500: "Error al consultar Cheques."
+        if (status === 500) {
+           this.logger.error(`Error 500 en BCRA consultando el cheque ${checkNumber}: ${bcraMessage}`);
+        }
         return {
-          error: false,
-          data: { denunciado: false, mensaje: 'Sin denuncias registradas.' }
+          error: true,
+          message: bcraMessage
         };
       }
 
-      // Error 400, 500, or connection timeout
-      this.logger.error(`Error consultando el cheque ${checkNumber}: ${axiosError.message}`);
+      // Connection timeout or unknow error 
+      this.logger.error(`Error de red consultando el cheque ${checkNumber}: ${axiosError.message}`);
       return { 
         error: true, 
-        message: 'Error al consultar la API de Cheques del BCRA. Intente nuevamente.' 
+        message: 'No se pudo establecer conexión con el API del BCRA. Intente nuevamente.' 
       };
     }
   }
@@ -87,13 +100,22 @@ export class ChecksService {
       return { error: false, data: this.cachedBanks };
     }
     catch (error: unknown) {
-      const axiosError = error as { message: string };
-      this.logger.error(`Error al obtener el listado de bancos: ${axiosError.message}`);
+      const axiosError = error as { response?: { status: number, data?: any }; message: string };
       
-      // If the API fails but there's cached data (even if it's old), then I return the cached data.
-      if (this.cachedBanks) return { error: false, data: this.cachedBanks };
+      const bcraMessages = axiosError.response?.data?.errorMessages;
+      const bcraMessage = (bcraMessages && bcraMessages.length > 0) 
+        ? bcraMessages[0] 
+        : 'No se pudo obtener el listado de bancos.';
+
+      this.logger.error(`Error al obtener el listado de bancos: ${bcraMessage} - ${axiosError.message}`);
       
-      return { error: true, message: 'No se pudo obtener el listado de bancos.' };
+      // If the API fails but we have a cache data then we return the cache
+      if (this.cachedBanks) {
+        this.logger.warn('Sirviendo listado de bancos desde la caché (fallback por error en API).');
+        return { error: false, data: this.cachedBanks };
+      }
+      
+      return { error: true, message: bcraMessage };
     }
   }
 }
