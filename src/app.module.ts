@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ConfigModule } from '@nestjs/config';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -10,16 +11,20 @@ import { ChecksModule } from './modules/checks/checks.module';
 
 @Module({
   imports: [
-    // Configuración de la conexión a PostgreSQL
+    ConfigModule.forRoot({
+      isGlobal: true, 
+    }),
+    // PostgreSQL configuration
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host: process.env.DB_HOST ?? 'localhost',
+      host: process.env.DB_HOST,
       port: parseInt(process.env.DB_PORT ?? '5432', 10),
-      username: process.env.DB_USERNAME ?? 'postgres',
-      password: process.env.DB_PASSWORD ?? 'root',
-      database: process.env.DB_NAME ?? 'bcra_consultation',
+      username: process.env.DB_USERNAME,
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_DATABASE,
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
-      synchronize: true, // Auto-crea las tablas en base a las entidades (Desactivar en producción real)
+      synchronize: true, 
+      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
     }),
     UsersModule,
     AuthModule,
