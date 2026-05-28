@@ -20,11 +20,17 @@ export class AuthService {
         const user = await this.usersService.findByEmail(email);
 
         if (user) {
+            console.log('Usuario encontrado en DB:', user.email);
             const isPasswordValid = await bcrypt.compare(passwordPlain, user.password);
+            console.log('¿Password válida?:', isPasswordValid);
+
             if (isPasswordValid) {
                 // Excludes the passwordHash from the returned user object for security reasons
                 const { password, ...result } = user;
                 return result;
+            }
+            else {
+                console.log('Usuario NO encontrado en DB');
             }
         }
 

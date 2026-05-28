@@ -46,7 +46,10 @@ export class UsersService {
      * @returns A user entity if found, or null if no user with that email exists.
      */
     async findByEmail(email: string): Promise<User | null> {
-        return this.userRepository.findOne({ where: { email } });
+        return this.userRepository.findOne({
+            where: { email },
+            select: ['id', 'email', 'password', 'username', 'role', 'createdAt']
+        });
     }
 
     /**
