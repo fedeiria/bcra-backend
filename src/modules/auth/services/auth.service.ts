@@ -36,31 +36,27 @@ export class AuthService {
 
         throw new UnauthorizedException('Credenciales inválidas');
     } */
+    // auth.service.ts
     async validateUser(email: string, passwordPlain: string): Promise<any> {
-        console.log('--- Intento de Login ---');
-        console.log('Email recibido:', email);
-
         const user = await this.usersService.findByEmail(email);
 
         if (!user) {
-            console.log('RESULTADO: Usuario NO encontrado en la base de datos');
-            throw new UnauthorizedException('Credenciales inválidas');
+            throw new UnauthorizedException('Error: Usuario no encontrado en DB');
         }
 
-        console.log('Usuario encontrado:', user.email);
-        console.log('¿Tiene password el objeto user?:', !!user.password); 
-        // Si lo de arriba da false, el problema es el select de TypeORM
+        if (!user.password) {
+            // SI ESTO EXPLOTA ACÁ, EL PROBLEMA ES TYPEORM/SELECT
+            throw new UnauthorizedException('Error: El password no se recuperó de la DB');
+        }
 
-        const isPasswordValid = await bcrypt.compare(passwordPlain, user.password || '');
-        console.log('¿Bcrypt validó correctamente?:', isPasswordValid);
+        const isPasswordValid = await bcrypt.compare(passwordPlain, user.password);
 
         if (isPasswordValid) {
             const { password, ...result } = user;
             return result;
         }
 
-        console.log('RESULTADO: Password incorrecta');
-        throw new UnauthorizedException('Credenciales inválidas');
+        throw new UnauthorizedException(`Error: Password no matchea. Recibida: ${passwordPlain.length} caracteres`);
     }
 
     /**
