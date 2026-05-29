@@ -16,48 +16,19 @@ export class AuthService {
      * @param passwordPlain The plain text password provided by the user for authentication
      * @returns A user object without the password hash if authentication is successful, or throws an exception if it fails
      */
-    /* async validateUser(email: string, passwordPlain: string): Promise<any> {
+    async validateUser(email: string, passwordPlain: string): Promise<any> {
         const user = await this.usersService.findByEmail(email);
 
         if (user) {
-            console.log('Usuario encontrado en DB:', user.email);
-            const isPasswordValid = await bcrypt.compare(passwordPlain, user.password);
-            console.log('¿Password válida?:', isPasswordValid);
+            const isPasswordValid = await bcrypt.compare(passwordPlain.trim(), user.password);
 
             if (isPasswordValid) {
-                // Excludes the passwordHash from the returned user object for security reasons
                 const { password, ...result } = user;
                 return result;
-            }
-            else {
-                console.log('Usuario NO encontrado en DB');
             }
         }
 
         throw new UnauthorizedException('Credenciales inválidas');
-    } */
-    // auth.service.ts
-    // auth.service.ts
-    async validateUser(email: string, passwordPlain: string): Promise<any> {
-        const user = await this.usersService.findByEmail(email);
-        if (!user) throw new UnauthorizedException('Usuario no encontrado');
-
-        const cleanPassword = passwordPlain.trim();
-        
-        // LOG DE EMERGENCIA: Vamos a ver qué está llegando realmente
-        console.log(`DEBUG: Intentando login para ${email}`);
-        console.log(`DEBUG: Largo de password recibida: ${cleanPassword.length}`);
-
-        // PRUEBA DE FUERZA BRUTA: Si el hash coincide con el que sabemos que es '123456'
-        const knownHash = '$2b$10$wN1kF1Xw3WbQvR2rM9uK7O/Nf0gZ8eH3R3m5xUClvj.vKxZ0C0YmG';
-        const isPasswordValid = await bcrypt.compare(cleanPassword, user.password);
-
-        if (isPasswordValid || (cleanPassword === '123456' && user.password === knownHash)) {
-            const { password, ...result } = user;
-            return result;
-        }
-
-        throw new UnauthorizedException('Credenciales inválidas post-fix');
     }
 
     /**
