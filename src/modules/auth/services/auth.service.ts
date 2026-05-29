@@ -16,7 +16,7 @@ export class AuthService {
      * @param passwordPlain The plain text password provided by the user for authentication
      * @returns A user object without the password hash if authentication is successful, or throws an exception if it fails
      */
-    async validateUser(email: string, passwordPlain: string): Promise<any> {
+    /* async validateUser(email: string, passwordPlain: string): Promise<any> {
         const user = await this.usersService.findByEmail(email);
 
         if (user) {
@@ -34,6 +34,32 @@ export class AuthService {
             }
         }
 
+        throw new UnauthorizedException('Credenciales inválidas');
+    } */
+    async validateUser(email: string, passwordPlain: string): Promise<any> {
+        console.log('--- Intento de Login ---');
+        console.log('Email recibido:', email);
+
+        const user = await this.usersService.findByEmail(email);
+
+        if (!user) {
+            console.log('RESULTADO: Usuario NO encontrado en la base de datos');
+            throw new UnauthorizedException('Credenciales inválidas');
+        }
+
+        console.log('Usuario encontrado:', user.email);
+        console.log('¿Tiene password el objeto user?:', !!user.password); 
+        // Si lo de arriba da false, el problema es el select de TypeORM
+
+        const isPasswordValid = await bcrypt.compare(passwordPlain, user.password || '');
+        console.log('¿Bcrypt validó correctamente?:', isPasswordValid);
+
+        if (isPasswordValid) {
+            const { password, ...result } = user;
+            return result;
+        }
+
+        console.log('RESULTADO: Password incorrecta');
         throw new UnauthorizedException('Credenciales inválidas');
     }
 
