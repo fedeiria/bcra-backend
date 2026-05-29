@@ -56,7 +56,7 @@ export class AuthService {
             return result;
         }
 
-        throw new UnauthorizedException(`Error: Password no matchea. Recibida: ${passwordPlain.length} caracteres`);
+        throw new UnauthorizedException(`Hash en DB: ${user.password} | Largo: ${user.password?.length}`);
     }
 
     /**
