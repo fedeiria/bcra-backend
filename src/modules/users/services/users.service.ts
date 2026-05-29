@@ -45,11 +45,20 @@ export class UsersService {
      * @param email The email of the user to find.
      * @returns A user entity if found, or null if no user with that email exists.
      */
-    async findByEmail(email: string): Promise<User | null> {
+    /* async findByEmail(email: string): Promise<User | null> {
         return this.userRepository.findOne({
             where: { email },
             select: ['id', 'email', 'password', 'username', 'role', 'createdAt']
         });
+    } */
+
+    // En users.service.ts
+    async findByEmail(email: string): Promise<User | null> {
+        return this.userRepository
+            .createQueryBuilder('user')
+            .where('user.email = :email', { email })
+            .addSelect('user.password')
+            .getOne();
     }
 
     /**
