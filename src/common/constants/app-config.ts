@@ -1,10 +1,4 @@
 export const APP_CONFIG = {
-    jwt: {
-        secret: process.env.JWT_SECRET ?? 'CLAVE_SECRETA_APP',
-        expiresIn: '15m',
-        refreshSecret: process.env.JWT_REFRESH_SECRET ?? 'CLAVE_SECRETA_REFRESH_APP',
-        refreshExpiresIn: '7d',
-    },
     bcraApi: {
         baseUrl: 'https://api.bcra.gob.ar/',
         timeout: 5000,
