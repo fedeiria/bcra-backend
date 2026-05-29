@@ -49,7 +49,7 @@ export class AuthService {
             throw new UnauthorizedException('Error: El password no se recuperó de la DB');
         }
 
-        const isPasswordValid = await bcrypt.compare(passwordPlain, user.password);
+        const isPasswordValid = await bcrypt.compare(passwordPlain.trim(), user.password);
 
         if (isPasswordValid) {
             const { password, ...result } = user;
