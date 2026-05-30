@@ -27,7 +27,7 @@ export class DebtsService {
      * @returns any.
      */
     private handleError(error: any): any {
-        console.error('Error in ConsultationService:', error?.response?.data || error.message);
+        console.error('Error in DebtsService:', error?.response?.data || error.message);
 
         // Network error / timeout
         if (!error.response || error.code === 'ECONNRESET' || error.code === 'ETIMEDOUT') {
@@ -134,10 +134,12 @@ export class DebtsService {
                 )
             );
 
-            const { data } = response;
+            //const { data } = response;
+
+            const historicalRaw = response.data.results;
 
             // API error validation
-            if (data?.status === 404 || data?.errorMessages?.[0]?.includes('No se encontró')) {
+            if (historicalRaw?.status === 404 || historicalRaw?.errorMessages?.[0]?.includes('No se encontró')) {
                 return {
                     error: true,
                     type: 'warning',
@@ -145,26 +147,18 @@ export class DebtsService {
                 };
             }
 
-            const periodos = data?.results?.periodos;
-            if (!Array.isArray(periodos) || periodos.length === 0) {
+            const processedHistory = historicalRaw.map(periodoData => {
+                const totalMes = periodoData.entidades.reduce((sum, ent) => sum + ent.monto, 0);
+
                 return {
-                    error: true,
-                    type: 'warning',
-                    message: 'No hay historial disponible para el CUIT ingresado.'
+                    periodo: periodoData.periodo,
+                    montoTotal: totalMes * 1000,
+                    cantidadEntidades: periodoData.entidades.length,
+                    peorSituacion: Math.max(...periodoData.entidades.map(e => Number(e.situacion)))
                 };
-            }
-
-            // Normalization and descending sorting of the history (most recent first)
-            const periodosOrdenados = [...periodos].sort((a, b) => Number(b.periodo) - Number(a.periodo));
-
-            return {
-                error: false,
-                data: {
-                    cuit: String(data.results.identificacion),
-                    denominacion: data.results.denominacion,
-                    periodos: periodosOrdenados
-                }
-            };
+            });
+            
+            return { error: false, data: processedHistory };
         }
         catch (error: any) {
             return this.handleError(error);
@@ -377,7 +371,6 @@ export class DebtsService {
         });
     }
 
-
     /**
      * Obtain the list of banking entities from the BCRA.
      */
@@ -413,7 +406,7 @@ export class DebtsService {
                     denunciado: data.denunciado,
                     fechaProcesamiento: data.fechaProcesamiento,
                     entidad: data.denominacionEntidad,
-                    detalles: data.detalles || [] // Detalles de la denuncia si existen
+                    detalles: data.detalles || []
                 }
             };
         }
