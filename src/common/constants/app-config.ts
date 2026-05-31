@@ -17,6 +17,13 @@ export const APP_CONFIG = {
                     entities: '/entidades',
                     reported: '/denunciados'
                 }
+            },
+            monetary: {
+                baseUrl: 'https://api.bcra.gob.ar/estadisticas/v4.0',
+                endpoints: {
+                    variables: '/monetarias',
+                    methodologies: '/metodologia'
+                }
             }
         }
     }
