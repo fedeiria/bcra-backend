@@ -24,6 +24,14 @@ export const APP_CONFIG = {
                     variables: '/monetarias',
                     methodologies: '/metodologia'
                 }
+            },
+            exchange: {
+                baseUrl: 'https://api.bcra.gob.ar/estadisticascambiarias/v1.0',
+                endpoints: {
+                    currencies: '/Maestros/Divisas',
+                    rates: '/Cotizaciones',
+                    evolution: '/Cotizaciones'
+                }
             }
         }
     }

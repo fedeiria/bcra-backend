@@ -6,6 +6,7 @@ import { AppService } from './app.service';
 import { DebtsModule } from './modules/debts/debts.module';
 import { ChecksModule } from './modules/checks/checks.module';
 import { MonetaryModule } from './modules/monetary/monetary.module';
+import { ExchangeModule } from './modules/exchange/exchange.module';
 
 @Module({
   imports: [
@@ -14,7 +15,8 @@ import { MonetaryModule } from './modules/monetary/monetary.module';
     }),
     DebtsModule,
     ChecksModule,
-    MonetaryModule
+    MonetaryModule,
+    ExchangeModule
   ],
   controllers: [AppController],
   providers: [AppService],
