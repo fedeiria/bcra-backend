@@ -7,6 +7,7 @@ import { DebtsModule } from './modules/debts/debts.module';
 import { ChecksModule } from './modules/checks/checks.module';
 import { MonetaryModule } from './modules/monetary/monetary.module';
 import { ExchangeModule } from './modules/exchange/exchange.module';
+import { StatusModule } from './modules/status/status.module';
 
 @Module({
   imports: [
@@ -16,7 +17,8 @@ import { ExchangeModule } from './modules/exchange/exchange.module';
     DebtsModule,
     ChecksModule,
     MonetaryModule,
-    ExchangeModule
+    ExchangeModule,
+    StatusModule
   ],
   controllers: [AppController],
   providers: [AppService],
