@@ -32,6 +32,18 @@ export const APP_CONFIG = {
                     rates: '/Cotizaciones',
                     evolution: '/Cotizaciones'
                 }
+            },
+            transparency: {
+                baseUrl: 'https://api.bcra.gob.ar/transparencia/v1.0',
+                endpoints: {
+                    savingsAccounts: '/CajasAhorros',
+                    productPackages: '/PaquetesProductos',
+                    fixedTerms: '/PlazosFijos',
+                    pledgeLoans: '/Prestamos/Prendarios',
+                    mortgageLoans: '/Prestamos/Hipotecarios',
+                    personalLoans: '/Prestamos/Personales',
+                    creditCards: '/TarjetasCredito'
+                }
             }
         }
     }

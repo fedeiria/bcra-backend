@@ -26,12 +26,12 @@ export class MonetaryController {
   /**
    * Return the history of a specific monetary variable, optimized by dates.
    * @param id The ID of the variable for which to fetch history.
-   * @param desde Optional start date for the history range.
-   * @param hasta Optional end date for the history range.
+   * @param startDate Optional start date for the history range.
+   * @param endDate Optional end date for the history range.
    * @returns The historical data for the specified variable.
    */
   @Get('variables/:id')
-  async getVariableHistory(@Param('id') id: string, @Query('desde') desde?: string, @Query('hasta') hasta?: string) {
-    return this.monetaryService.getVariableHistory(id, desde, hasta);
+  async getVariableHistory(@Param('id') id: string, @Query('desde') startDate?: string, @Query('hasta') endDate?: string) {
+    return this.monetaryService.getVariableHistory(id, startDate, endDate);
   }
 }

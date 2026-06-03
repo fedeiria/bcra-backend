@@ -75,17 +75,17 @@ export class MonetaryService {
   /**
    * Get the history of a specific monetary variable, optimized by dates.
    * @param idVariable The ID of the variable for which to fetch history.
-   * @param desde Optional start date for the history range.
-   * @param hasta Optional end date for the history range.
+   * @param startDate Optional start date for the history range.
+   * @param endDate Optional end date for the history range.
    * @returns The historical data for the specified variable.
    */
-  async getVariableHistory(idVariable: string, desde?: string, hasta?: string): Promise<any> {
+  async getVariableHistory(idVariable: string, startDate?: string, endDate?: string): Promise<any> {
     try {
       let url = `${this.BASE_URL}${this.ENDPOINTS.variables}/${idVariable}`;
       
       const params = new URLSearchParams();
-      if (desde) params.append('desde', desde);
-      if (hasta) params.append('hasta', hasta);
+      if (startDate) params.append('desde', startDate);
+      if (endDate) params.append('hasta', endDate);
       
       if (params.toString()) {
         url += `?${params.toString()}`;

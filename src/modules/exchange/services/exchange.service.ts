@@ -34,8 +34,14 @@ export class ExchangeService {
             const response = await firstValueFrom(this.httpService.get(url, { timeout: this.TIMEOUT }));
 
             const rawResults = response.data.results || [];
+
+            // delete duplicates based on 'codigo' and sort by 'denominacion'
             const uniqueMap = new Map(rawResults.map((item: any) => [item.codigo, item]));
-            const cleanedResults = Array.from(uniqueMap.values()).sort((a: any, b: any) => a.denominacion.localeCompare(b.denominacion));
+
+            // sort by 'codigo' instead of 'denominacion' to ensure consistent ordering
+            const cleanedResults = Array.from(uniqueMap.values()).sort((a: any, b: any) => 
+                a.codigo.localeCompare(b.codigo)
+            );
 
             this.cachedCurrencies = cleanedResults;
             this.lastFetch = now;
@@ -49,15 +55,15 @@ export class ExchangeService {
 
   /**
    * Get exchange rates for a specific date. If no date is provided, it returns the latest rates.
-   * @param fecha The date for which to retrieve exchange rates in YYYY-MM-DD format. Optional.
+   * @param date The date for which to retrieve exchange rates in YYYY-MM-DD format. Optional.
    * @returns A Promise resolving to an object with error status and data or message.
    */
-    async getRates(fecha?: string): Promise<any> {
+    async getRates(date?: string): Promise<any> {
         try {
             const url = `${this.BASE_URL}${this.ENDPOINTS.rates}`;
-            const params = fecha ? { fecha } : {};
+            const params = date ? { fecha: date } : {};
             const response = await firstValueFrom(this.httpService.get(url, { params, timeout: this.TIMEOUT }));
-            const data = response.data.results || { fecha: fecha || null, detalle: [] };
+            const data = response.data.results || { fecha: date || null, detalle: [] };
 
             return { error: false, data };
         }
@@ -68,21 +74,21 @@ export class ExchangeService {
 
   /**
    * Get evolution data for a specific currency.
-   * @param moneda The currency for which to retrieve evolution data.
-   * @param fechadesde The start date for the evolution data in YYYY-MM-DD format. Optional.
-   * @param fechahasta The end date for the evolution data in YYYY-MM-DD format. Optional.
+   * @param currency The currency for which to retrieve evolution data.
+   * @param startDate The start date for the evolution data in YYYY-MM-DD format. Optional.
+   * @param endDate The end date for the evolution data in YYYY-MM-DD format. Optional.
    * @returns A Promise resolving to an object with error status and data or message.
    */
-    async getEvolution(moneda: string, fechadesde?: string, fechahasta?: string): Promise<any> {
+    async getEvolution(currency: string, startDate?: string, endDate?: string): Promise<any> {
         try {
-            const url = `${this.BASE_URL}${this.ENDPOINTS.evolution}/${moneda}`;
-            const params = { fechadesde, fechahasta };
+            const url = `${this.BASE_URL}${this.ENDPOINTS.evolution}/${currency}`;
+            const params = { fechadesde: startDate, fechahasta: endDate };
             const response = await firstValueFrom(this.httpService.get(url, { params, timeout: this.TIMEOUT }));
 
             return { error: false, data: response.data };
         }
         catch (error) {
-            return this.handleError(error, `Error al consultar evolución de ${moneda}.`);
+            return this.handleError(error, `Error al consultar evolución de ${currency}.`);
         }
     }
 

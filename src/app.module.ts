@@ -8,6 +8,7 @@ import { ChecksModule } from './modules/checks/checks.module';
 import { MonetaryModule } from './modules/monetary/monetary.module';
 import { ExchangeModule } from './modules/exchange/exchange.module';
 import { StatusModule } from './modules/status/status.module';
+import { TransparencyModule } from './modules/transparency/transparency.module';
 
 @Module({
   imports: [
@@ -18,7 +19,8 @@ import { StatusModule } from './modules/status/status.module';
     ChecksModule,
     MonetaryModule,
     ExchangeModule,
-    StatusModule
+    StatusModule,
+    TransparencyModule
   ],
   controllers: [AppController],
   providers: [AppService],
