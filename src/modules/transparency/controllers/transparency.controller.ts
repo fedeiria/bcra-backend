@@ -22,7 +22,7 @@ export class TransparencyController {
      * @returns A list of credit cards.
      */
     @Get('cards')
-    async getCreditCards( @Query('codigoEntidad', new ParseIntPipe({ optional: true })) entityCode?: number) {
+    async getCreditCards(@Query('codigoEntidad', new ParseIntPipe({ optional: true })) entityCode?: number) {
         return await this.transparencyService.getCreditCards(entityCode);
     }
 
@@ -44,5 +44,15 @@ export class TransparencyController {
     @Get('savings-accounts')
     async getSavingsAccounts(@Query('codigoEntidad', new ParseIntPipe({ optional: true })) entityCode?: number) {
         return await this.transparencyService.getSavingsAccounts(entityCode);
+    }
+
+    /**
+     * Get personal loans. Optionally filter by financial entity code.
+     * @param entityCode The code of the financial entity to filter by (optional).
+     * @returns List of personal loans.
+     */
+    @Get('personal-loans')
+    async getPersonalLoans(@Query('codigoEntidad', new ParseIntPipe({ optional: true })) entityCode?: number) {
+        return await this.transparencyService.getPersonalLoans(entityCode);
     }
 }

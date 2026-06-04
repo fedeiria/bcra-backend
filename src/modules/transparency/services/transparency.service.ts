@@ -115,4 +115,30 @@ export class TransparencyService {
 
         return data.results;
     }
+
+    /**
+     * Get personal loans.
+     * @param entityCode Optional. Code of the financial entity to filter.
+     * @returns List of personal loans.
+     */
+    async getPersonalLoans(entityCode?: number): Promise<any> {
+        const url = `${this.BASE_URL}${this.ENDPOINTS.personalLoans}`;
+
+        const params = entityCode ? { codigoEntidad: entityCode } : {};
+
+        const { data } = await firstValueFrom(
+            this.httpService.get<any>(url, { params, timeout: this.TIMEOUT }).pipe(
+                catchError((error) => {
+                    const status = error.response?.status || HttpStatus.BAD_GATEWAY;
+                    const messages = error.response?.data?.errorMessages?.length
+                        ? error.response.data.errorMessages.join(', ')
+                        : 'Error de conexión con la API del BCRA al obtener los datos de préstamos personales.';
+
+                    throw new HttpException(`Error BCRA: ${messages}`, status);
+                }),
+            ),
+        );
+
+        return data.results;
+    }
 }
