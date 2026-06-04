@@ -28,7 +28,7 @@ export class TransparencyService {
                     const status = error.response?.status || HttpStatus.BAD_GATEWAY;
                     const messages = error.response?.data?.errorMessages?.length
                         ? error.response.data.errorMessages.join(', ')
-                        : 'Error interno en la API del BCRA.';
+                        : 'Error de conexión con la API del BCRA al obtener los datos de paquetes de productos.';
 
                     throw new HttpException(`Error BCRA: ${messages}`, status);
                 }),
@@ -54,7 +54,7 @@ export class TransparencyService {
                     const status = error.response?.status || HttpStatus.BAD_GATEWAY;
                     const messages = error.response?.data?.errorMessages?.length
                         ? error.response.data.errorMessages.join(', ')
-                        : 'Error de conexión con la API del BCRA.';
+                        : 'Error de conexión con la API del BCRA al obtener los datos de tarjetas de crédito.';
 
                     throw new HttpException(`Error BCRA: ${messages}`, status);
                 }),
@@ -80,7 +80,7 @@ export class TransparencyService {
                     const status = error.response?.status || HttpStatus.BAD_GATEWAY;
                     const messages = error.response?.data?.errorMessages?.length
                         ? error.response.data.errorMessages.join(', ')
-                        : 'Error de conexión con la API del BCRA al obtener plazos fijos.';
+                        : 'Error de conexión con la API del BCRA al obtener los datos de plazos fijos.';
 
                     throw new HttpException(`Error BCRA: ${messages}`, status);
                 }),
@@ -106,7 +106,7 @@ export class TransparencyService {
                     const status = error.response?.status || HttpStatus.BAD_GATEWAY;
                     const messages = error.response?.data?.errorMessages?.length
                         ? error.response.data.errorMessages.join(', ')
-                        : 'Error de conexión con la API del BCRA al obtener cajas de ahorro.';
+                        : 'Error de conexión con la API del BCRA al obtener los datos de cajas de ahorro.';
 
                     throw new HttpException(`Error BCRA: ${messages}`, status);
                 }),
@@ -139,6 +139,51 @@ export class TransparencyService {
             ),
         );
 
+        return data.results;
+    }
+
+    /**
+     * Get mortgage loans.
+     * @param entityCode Optional. Code of the financial entity.
+     * @returns List of mortgage loans.
+     */
+    async getMortgageLoans(entityCode?: number): Promise<any> {
+        const url = `${this.BASE_URL}${this.ENDPOINTS.mortgageLoans}`;
+        const params = entityCode ? { codigoEntidad: entityCode } : {};
+
+        const { data } = await firstValueFrom(
+            this.httpService.get<any>(url, { params, timeout: this.TIMEOUT }).pipe(
+                catchError((error) => {
+                    const status = error.response?.status || HttpStatus.BAD_GATEWAY;
+                    const message = error.response?.data?.errorMessages?.[0] || 'Error de conexión con la API del BCRA al obtener los datos de préstamos hipotecarios';
+
+                    throw new HttpException(`Error BCRA: ${message}`, status);
+                }),
+            ),
+        );
+
+        return data.results;
+    }
+
+    /**
+     * Get pledge loans.
+     * @param entityCode Optional. Code of the financial entity to filter. 
+     * @returns A list of pledge loans.
+     */
+    async getPledgeLoans(entityCode?: number): Promise<any> {
+        const url = `${this.BASE_URL}${this.ENDPOINTS.pledgeLoans}`;
+        const params = entityCode ? { codigoEntidad: entityCode } : {};
+
+        const { data } = await firstValueFrom(
+            this.httpService.get<any>(url, { params, timeout: this.TIMEOUT }).pipe(
+                catchError((error) => {
+                    const status = error.response?.status || HttpStatus.BAD_GATEWAY;
+                    const message = error.response?.data?.errorMessages?.[0] || 'Error de conexión con la API del BCRA al obtener los datos de préstamos prendarios';
+
+                    throw new HttpException(`Error BCRA: ${message}`, status);
+                }),
+            ),
+        );
         return data.results;
     }
 }

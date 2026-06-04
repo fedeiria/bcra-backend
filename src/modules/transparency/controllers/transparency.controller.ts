@@ -55,4 +55,24 @@ export class TransparencyController {
     async getPersonalLoans(@Query('codigoEntidad', new ParseIntPipe({ optional: true })) entityCode?: number) {
         return await this.transparencyService.getPersonalLoans(entityCode);
     }
+
+    /**
+     * Get mortgage loans. Optionally filter by financial entity code.
+     * @param entityCode The code of the financial entity to filter by (optional).
+     * @returns List of mortgage loans.
+     */
+    @Get('mortgage-loans')
+    async getMortgageLoans(@Query('codigoEntidad', new ParseIntPipe({ optional: true })) entityCode?: number) {
+        return await this.transparencyService.getMortgageLoans(entityCode);
+    }
+
+    /**
+     * Get pledge loans. Optionally filter by financial entity code.
+     * @param entityCode The code of the financial entity to filter by (optional).
+     * @returns A list of pledge loans.
+     */
+    @Get('pledge-loans')
+    async getPledgeLoans(@Query('codigoEntidad', new ParseIntPipe({ optional: true })) entityCode?: number) {
+        return await this.transparencyService.getPledgeLoans(entityCode);
+    }
 }
