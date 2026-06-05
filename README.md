@@ -34,16 +34,14 @@ Para unificar la API y proteger el ruteo, el servidor aplica un prefijo global e
 ```typescript
 app.setGlobalPrefix('api');
 
-git clone [https://github.com/fedeiria/bcra-backend.git]
+git clone [https://github.com/fedeiria/bcra-backend.git](https://github.com/fedeiria/bcra-backend.git)
 
 
 2.  **Instalar dependencias:**
-bash
-    npm install
+npm install
 
 3.  **Ejecutar en modo desarrollo (Watch mode):**
-bash
-    npm run start:dev
+npm run start:dev
 
 🚀 El servidor local arrancará en `http://localhost:3000/api/`.
 
