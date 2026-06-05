@@ -35,17 +35,16 @@ Para unificar la API y proteger el ruteo, el servidor aplica un prefijo global e
 app.setGlobalPrefix('api');
 
 git clone [https://github.com/fedeiria/bcra-backend.git]
-    ```
+
 
 2.  **Instalar dependencias:**
-```bash
+bash
     npm install
-    ```
 
 3.  **Ejecutar en modo desarrollo (Watch mode):**
-```bash
+bash
     npm run start:dev
-    ```
+
 🚀 El servidor local arrancará en `http://localhost:3000/api/`.
 
 ---
@@ -57,8 +56,9 @@ Para evitar la suspensión automática tras 15 minutos de inactividad típica de
 ### 1. Endpoint de Monitoreo
 Se implementó el endpoint ultra-liviano `GET /api/status/ping` que responde de manera inmediata sin sobrecargar el servidor ni realizar consultas externas:
 
-```json
+json
 {
   "status": "online",
   "timestamp": "2026-06-01T15:51:50.616Z"
 }
+```
