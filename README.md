@@ -12,6 +12,7 @@ El proyecto está completamente modularizado para mantener una arquitectura esca
 *   **💱 `api/exchange`**: Estadísticas cambiarias y evolución histórica de divisas.
 *   **📋 `api/checks`**: Módulo para la gestión y verificación de cheques.
 *   **💳 `api/debts`**: Central de deudores y procesamiento de información financiera.
+*   **📈 `api/transparency`**: Permite consultar productos, tasas, comisiones y demás datos regulados.
 *   **⏱️ `api/status`**: Endpoint dedicado al monitoreo de salud (*health check*) y *keep-alive*.
 
 ---
@@ -52,7 +53,7 @@ npm run start:dev
 Para evitar la suspensión automática tras 15 minutos de inactividad típica de las cuentas gratuitas de Render, el proyecto cuenta con una estrategia de auto-despertador (*Keep-Alive*):
 
 ### 1. Endpoint de Monitoreo
-Se implementó el endpoint ultra-liviano `GET /api/status/ping` que responde de manera inmediata sin sobrecargar el servidor ni realizar consultas externas:
+Se implementó el endpoint `GET /api/status/ping` que responde de manera inmediata sin sobrecargar el servidor ni realizar consultas externas:
 
 json
 {
