@@ -18,7 +18,7 @@ export class BcraCacheInterceptor implements NestInterceptor {
       return next.handle();
     }
 
-    // I construct a unique key by combining the path and the queries (e.g., /transparency/fixed-terms:codigoEntidad=10)
+    // Construct a unique key by combining the path and the queries (e.g., /transparency/fixed-terms:codigoEntidad=10)
     const { url, query } = request;
     const sortedQueryParams = Object.keys(query)
       .sort()

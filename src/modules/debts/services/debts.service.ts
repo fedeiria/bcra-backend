@@ -1,36 +1,30 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
-import axiosRetry from 'axios-retry';
+import { AxiosError } from 'axios';
 
 import { APP_CONFIG } from '../../../common/constants/app-config';
 
 @Injectable()
 export class DebtsService {
-    
+    private readonly logger = new Logger(DebtsService.name);
     private readonly BASE_URL = APP_CONFIG.bcraApi.services.debts.baseUrl;
     private readonly ENDPOINTS = APP_CONFIG.bcraApi.services.debts.endpoints;
     private readonly TIMEOUT = APP_CONFIG.bcraApi.timeout;
 
-    constructor(private readonly httpService: HttpService) {
-        axiosRetry(this.httpService.axiosRef, {
-            retries: APP_CONFIG.bcraApi.retries,
-            retryDelay: axiosRetry.exponentialDelay,
-            shouldResetTimeout: true,
-            retryCondition: (error) => axiosRetry.isNetworkOrIdempotentRequestError(error)
-        });
-    }
+    constructor(private readonly httpService: HttpService) { }
 
     /**
      * Centralized error handler for BCRA requests.
      * @param error The errot handle.
      * @returns any.
      */
-    private handleError(error: any): any {
-        console.error('Error in DebtsService:', error?.response?.data || error.message);
+    private handleError(error: unknown, context: string) {
+        const axiosError = error as AxiosError<{ errorMessages?: string[] }>;
+        this.logger.error(`[${context}] Error detectado: ${axiosError.message}`);
 
-        // Network error / timeout
-        if (!error.response || error.code === 'ECONNRESET' || error.code === 'ETIMEDOUT') {
+        // Network error / Timeout / Conection down
+        if (!axiosError.response || axiosError.code === 'ECONNRESET' || axiosError.code === 'ETIMEDOUT') {
             return {
                 error: true,
                 type: 'danger',
@@ -38,8 +32,8 @@ export class DebtsService {
             };
         }
 
-        // API 404 error
-        if (error.response?.status === 404) {
+        // Error HTTP 404
+        if (axiosError.response?.status === 404) {
             return {
                 error: true,
                 type: 'warning',
@@ -52,7 +46,7 @@ export class DebtsService {
             error: true,
             type: 'danger',
             message: 'Ocurrió un error interno en la plataforma del BCRA al procesar la solicitud.',
-            details: error.message
+            details: axiosError.message
         };
     }
 
@@ -116,7 +110,7 @@ export class DebtsService {
             };
         }
         catch (error: any) {
-            return this.handleError(error);
+            return this.handleError(error, 'getCurrentDebt');
         }
     }
 
@@ -161,7 +155,7 @@ export class DebtsService {
             return { error: false, data: processedHistory };
         }
         catch (error: any) {
-            return this.handleError(error);
+            return this.handleError(error, 'getHistoricalDebt');
         }
     }
 
@@ -233,7 +227,7 @@ export class DebtsService {
             };
         }
         catch (error: any) {
-            return this.handleError(error);
+            return this.handleError(error, 'getRejectedChecks');
         }
     }
 
@@ -292,7 +286,7 @@ export class DebtsService {
             };
         }
         catch (error: any) {
-            return this.handleError(error);
+            return this.handleError(error, 'getHistoricalEvolution');
         }
     }
 
@@ -355,19 +349,14 @@ export class DebtsService {
 
         // Mapping the results to return them in a clean format
         return results.map((result, index) => {
-            if (result.status === 'fulfilled') {
-                return result.value;
-            }
-            else {
-                // Extreme case: if the promise itself failed (not the service, but the code)
-                console.error(`Error crítico procesando CUIT ${cuits[index]}:`, result.reason);
+            if (result.status === 'fulfilled') return result.value;
 
-                return {
-                    error: true,
-                    type: 'danger',
-                    message: `Error procesando la consulta para ${cuits[index]}.`
-                };
-            }
+            this.logger.error(`Error crítico procesando lote de CUIT ${cuits[index]}:`, result.reason);
+            return {
+                error: true,
+                type: 'danger',
+                message: `Error procesando la consulta para ${cuits[index]}.`
+            };
         });
     }
 }
