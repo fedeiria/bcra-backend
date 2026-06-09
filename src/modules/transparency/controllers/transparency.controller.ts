@@ -1,8 +1,10 @@
-import { Controller, Get, Query, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Query, ParseIntPipe, UseInterceptors } from '@nestjs/common';
 
 import { TransparencyService } from '../services/transparency.service';
+import { BcraCacheInterceptor } from '../../../common/interceptors/bcra-cache/bcra-cache.interceptor';
 
 @Controller('transparency')
+@UseInterceptors(BcraCacheInterceptor)
 export class TransparencyController {
     constructor(private readonly transparencyService: TransparencyService) { }
 

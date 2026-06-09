@@ -1,8 +1,10 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import { Controller, Get, Param, Query, UseInterceptors } from '@nestjs/common';
 
 import { MonetaryService } from '../services/monetary.service';
+import { BcraCacheInterceptor } from '../../../common/interceptors/bcra-cache/bcra-cache.interceptor';
 
 @Controller('monetary')
+@UseInterceptors(BcraCacheInterceptor)
 export class MonetaryController {
   
   constructor(private readonly monetaryService: MonetaryService) {}

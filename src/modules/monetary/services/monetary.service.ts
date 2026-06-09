@@ -12,14 +12,6 @@ export class MonetaryService {
   private readonly ENDPOINTS = APP_CONFIG.bcraApi.services.monetary.endpoints;
   private readonly TIMEOUT = APP_CONFIG.bcraApi.timeout;
 
-  // Caché variables
-  private cachedVariables: any[] | null = null;
-  private cachedMethodologies: any[] | null = null;
-
-  private lastFetchVariables: number = 0;
-  private lastFetchMethodologies: number = 0;
-  private readonly CACHE_DURATION = 24 * 60 * 60 * 1000; // 24hs
-
   constructor(private readonly httpService: HttpService) {
     axiosRetry(this.httpService.axiosRef, {
       retries: APP_CONFIG.bcraApi.retries,
@@ -51,23 +43,16 @@ export class MonetaryService {
    * @returns The list of monetary variables, either from cache or fresh from the API.
    */
   async getVariables(): Promise<any> {
-    const now = Date.now();
-
-    if (this.cachedVariables && (now - this.lastFetchVariables < this.CACHE_DURATION)) {
-      return { error: false, data: this.cachedVariables };
-    }
-
     try {
       const url = `${this.BASE_URL}${this.ENDPOINTS.variables}`;
       const response = await firstValueFrom(this.httpService.get(url, { timeout: this.TIMEOUT }));
       
-      this.cachedVariables = response.data.results;
-      this.lastFetchVariables = now;
-
-      return { error: false, data: this.cachedVariables };
+      return { 
+        error: false, 
+        data: response.data.results 
+      };
     }
     catch (error) {
-      if (this.cachedVariables) return { error: false, data: this.cachedVariables, cached: true };
       return this.handleError(error, 'getVariables');
     }
   }
@@ -109,22 +94,16 @@ export class MonetaryService {
    * @returns The list of methodologies, either from cache or fresh from the API.
    */
   async getMethodologies(): Promise<any> {
-    const now = Date.now();
-    if (this.cachedMethodologies && (now - this.lastFetchMethodologies < this.CACHE_DURATION)) {
-      return { error: false, data: this.cachedMethodologies };
-    }
-
     try {
       const url = `${this.BASE_URL}${this.ENDPOINTS.methodologies}`;
       const response = await firstValueFrom(this.httpService.get(url, { timeout: this.TIMEOUT }));
       
-      this.cachedMethodologies = response.data.results;
-      this.lastFetchMethodologies = now;
-
-      return { error: false, data: this.cachedMethodologies };
+      return { 
+        error: false, 
+        data: response.data.results 
+      };
     }
     catch (error) {
-      if (this.cachedMethodologies) return { error: false, data: this.cachedMethodologies, cached: true };
       return this.handleError(error, 'getMethodologies');
     }
   }

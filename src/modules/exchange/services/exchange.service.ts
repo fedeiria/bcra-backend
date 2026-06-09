@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
+import { AxiosError } from 'axios'
 
 import { APP_CONFIG } from '../../../common/constants/app-config';
 
@@ -11,10 +12,6 @@ export class ExchangeService {
   private readonly ENDPOINTS = APP_CONFIG.bcraApi.services.exchange.endpoints;
   private readonly TIMEOUT = APP_CONFIG.bcraApi.timeout;
 
-  private cachedCurrencies: any[] | null = null;
-  private lastFetch: number = 0;
-  private readonly CACHE_DURATION = 24 * 60 * 60 * 1000;
-
   constructor(private readonly httpService: HttpService) {}
 
   /**
@@ -22,13 +19,6 @@ export class ExchangeService {
    * @returns A Promise resolving to an object with error status and data or message.
    */
     async getCurrencies(): Promise<any> {
-        const now = Date.now();
-
-        if (this.cachedCurrencies && (now - this.lastFetch < this.CACHE_DURATION)) {
-            this.logger.log('Sirviendo maestro de divisas desde caché interna.');
-            return { error: false, data: this.cachedCurrencies };
-        }
-
         try {
             const url = `${this.BASE_URL}${this.ENDPOINTS.currencies}`;
             const response = await firstValueFrom(this.httpService.get(url, { timeout: this.TIMEOUT }));
@@ -43,10 +33,7 @@ export class ExchangeService {
                 a.codigo.localeCompare(b.codigo)
             );
 
-            this.cachedCurrencies = cleanedResults;
-            this.lastFetch = now;
-
-            return { error: false, data: this.cachedCurrencies };
+            return { error: false, data: cleanedResults };
         }
         catch (error) {
             return this.handleError(error, 'No se pudo obtener el maestro de divisas.');
@@ -99,10 +86,11 @@ export class ExchangeService {
    * @returns An object with error status and message.
    */
     private handleError(error: any, defaultMsg: string) {
-        const bcraMessages = error.response?.data?.errorMessages;
-        const message = (bcraMessages && bcraMessages.length > 0) ? bcraMessages[0] : defaultMsg;
+        const axiosError = error as AxiosError<{ errorMessages?: string[] }>;
+        const bcraMessages = axiosError.response?.data?.errorMessages;
+        const message = bcraMessages?.[0] || defaultMsg;
 
-        this.logger.error(`${defaultMsg} - ${error.message}`);
+        this.logger.error(`${defaultMsg} - ${axiosError.message}`);
 
         return { error: true, message };
     }
